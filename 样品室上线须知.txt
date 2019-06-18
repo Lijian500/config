@@ -1,0 +1,50 @@
+1.case_code表 新增字段 year data_number
+2.案件主表新增案组字段 case_group
+3.case_data 新增data_nature
+4.新增样品销毁审批权限
+5.创建新的索引
+
+CREATE INDEX case_data_nature_index ON case_data(data_nature);
+CREATE INDEX case_data_user_id ON case_data(data_user_id);
+CREATE INDEX data_user_id_pkey ON case_data_user(data_user_id);
+CREATE INDEX data_user_deleted_index ON case_data_user(deleted);
+CREATE INDEX data_user_full_name_index ON case_data_user(full_name);
+
+CREATE INDEX sample_room_data_id_index ON sample_room(data_id);
+CREATE INDEX sample_room_is_receive_index ON sample_room(is_receive);
+CREATE INDEX sample_room_is_destroy_index ON sample_room(is_destroy);
+CREATE INDEX sample_room_case_id_index ON sample_room(case_id);
+
+CREATE INDEX sample_receive_id_pkey ON sample_receive(receive_id);
+
+CREATE INDEX sample_send_id_pkey ON sample_send(send_id);
+CREATE INDEX sample_send_detail_id_pkey ON sample_send_detail(id);
+CREATE INDEX sample_send_detail_data_id_index ON sample_send_detail(data_id);
+
+6.案号生成规则加入年份判断，上线前需重点关注
+7.添加样品流转模板
+8.服务器上需要创建目录 /mnt/files/DW/YPLZD 存放excel  （邮寄模块交寄单：/mnt/files/DW/JJD）
+9.oa发送消息增加了 text类型
+10.case_data,case_entrust,case_document,case_record 新增send_id字，函送主表的id
+11.新增一个函送登记员的角色
+12.case_info 新增send_id字段
+13.sms_send表新增 letter_send_id 字段
+14.oa发送短信接口有修改
+15.业务系统新建一个函送登记员的权限（id: 125），用函送登记员的角色关联上。
+16.case_operation 表新增函送id字段， send_id
+17.case_document 新增stamp_status 字段
+18.业务系统添加 函送收回案件列表权限（127）
+19. 样品事件轴功能，需要添加触发器（发放样品并添加到数据库的时候，触发）
+-- 创建触发器函数
+CREATE OR REPLACE FUNCTION insert_log_sample()
+RETURNS TRIGGER AS $$
+BEGIN
+	INSERT INTO case_data_account(case_data_id,soperator,status,record_time,update_time,deleted) 
+		SELECT ssd.data_id,sse.first_appraiser_id,6 as status,now(),now(),0 as deleted FROM sample_send_detail ssd LEFT JOIN sample_send sse ON ssd.send_id = sse.send_id WHERE ssd.data_id = new.data_id; 
+		RETURN OLD;
+END;
+$$
+language plpgsql;
+-- 创建触发器
+create trigger sample_log_trigger be insert on sample_send_detail for EACH ROW execute procedure insert_log_sample();
+
