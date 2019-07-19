@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>第二个HTML页面</title>
+</head>
+<body>
+<h1>Hello Spring Boot!!!</h1>
+<p th:text="${hello}"></p>
+<div>
+    <p th:text="${say}"></p>
+</div>
+<div>---------------------------------------------------------</div>
+<a href="http://101.132.45.82:9200/hello">第一个客户端</a>
+<div>---------------------------------------------------------</div>
+<a href="http://101.132.45.82:9300/logoutDefault">默认方式退出登陆</a>
+<a href="http://101.132.45.82:9300/logoutCustom">自定义页面退出登陆</a>
+
+
+</body>
+</html>
